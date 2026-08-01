@@ -861,14 +861,27 @@ function showSite(){
 
   function fileToBase64(file){
     return new Promise(function(resolve, reject){
-      var reader = new FileReader();
-      reader.onload = function(){
-        // reader.result é algo tipo "data:image/jpeg;base64,AAAA..."
-        var base64 = reader.result.split(',')[1];
-        resolve(base64);
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function(){
+        URL.revokeObjectURL(url);
+        var maxDim = 1280;
+        var w = img.width, h = img.height;
+        if(w > maxDim || h > maxDim){
+          if(w > h){ h = Math.round(h * (maxDim / w)); w = maxDim; }
+          else { w = Math.round(w * (maxDim / h)); h = maxDim; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+        resolve(dataUrl.split(',')[1]);
       };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+      img.onerror = function(){
+        URL.revokeObjectURL(url);
+        reject(new Error('Não foi possível processar a imagem.'));
+      };
+      img.src = url;
     });
   }
 
@@ -898,7 +911,8 @@ function showSite(){
       pendingPayload = {
         ref: ref, plano: plano, nome: nome, email: email, peca: peca, descricao: descricao,
         photos: base64List.map(function(b64, i){
-          return { filename: files[i].name, contentBase64: b64 };
+          var baseName = files[i].name.replace(/\.[^.]+$/, '');
+          return { filename: baseName + '.jpg', contentBase64: b64 };
         })
       };
     });
