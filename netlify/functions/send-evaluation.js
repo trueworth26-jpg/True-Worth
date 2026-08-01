@@ -8,7 +8,7 @@
 //   photos: [{ filename: "foto1.jpg", contentBase64: "..." }, ...]
 // }
 
-const DESTINO = 'TrueWorth26@gmail.com';
+const DESTINO = 'trueworth26@gmail.com';
 
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
